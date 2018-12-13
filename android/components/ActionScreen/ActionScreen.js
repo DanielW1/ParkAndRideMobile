@@ -67,20 +67,22 @@ export default class ActionScreen extends Component {
                 gpsLat: position.coords.latitude,     
                 gpsLng: position.coords.longitude,     
                 error: null,     
-              });  
+              },() =>this.getBestRoad());  
             },
 
             (error) => this.setState({ error: error.message }),      
-            { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000, distanceFilter: 10 },     
+            { enableHighAccuracy: true, timeout: 20000, distanceFilter: 10 },     
           );
 
-          axios.get(`https://parkandrideapp.azurewebsites.net/Parking/mobilebestRoad?gpsLat=${this.state.gpsLat}&gpsLng=${this.state.gpsLng}`).then(res => {
-            const bestParkings = res.data;
-            this.setState({ bestParkings });
-          });
+
     }
 
-
+getBestRoad = () => {
+    axios.get(`https://parkandrideapp.azurewebsites.net/Parking/mobilebestRoad?gpsLat=${this.state.gpsLat}&gpsLng=${this.state.gpsLng}`).then(res => {
+        const bestParkings = res.data;
+        this.setState({ bestParkings });
+      });
+}
 
     render() {
         const { navigate } = this.props.navigation;
@@ -101,6 +103,7 @@ export default class ActionScreen extends Component {
         const buttonBestRoad = {
             content: "Najlepszy dojazd", type: true,
             screen: "Map", navigate: navigate, param: bestParkings,myLocation:true,
+            drawPanel:true
         }
         const buttonLoguot = {
             content: "Wyloguj", type: true,

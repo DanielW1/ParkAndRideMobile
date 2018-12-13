@@ -2,10 +2,20 @@ import React, { Component } from 'react';
 import { StyleSheet, View, TextInput, Button } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import Polyline from '@mapbox/polyline';
+import cn from 'react-native-classnames'
 import axios from 'axios';
 
 
-
+/**
+ * Komponent screen mapy wołamy z różnymi parametrami w zależności od funkcji jaką ma pełnić.
+ * Możemy wyświetlać własną lokalizację, drogę z punktu A do punktu B , nanieść markery na mapę w
+ * punktach podanych w parametrze param - parkings.
+ * param - lista parkingów
+ * myLocation - boolean
+ * searchPanel - boolean czy ma być panel do wyszukiwania loakcji,
+ * drawPanel - boolean pokazuje wybrany punkt na mapie przez wyświetlenie nazwy w inpucie. Zatwierdzamy guzikiem obok.
+ * drawRoad - boolean czy ma zadziać się akcja wyznaczania drogi po akcji onPress na Markerze
+ */
 
 export default class MapScreen extends Component {
   static navigationOptions = {
@@ -17,17 +27,18 @@ export default class MapScreen extends Component {
     this.state = {
       parkings: [],
       coords: [],
-      gpsLat: 0.0,
-      gpsLng: 0.0,
+      gpsLat: 52.2,
+      gpsLng: 21.2,
       name: "",
       inputValue: "",
     }
     this.navigation = this.props.navigation;
     this.parkings = this.navigation.getParam('param', []);
+
   }
 
   componentDidMount() {
-
+    this.getCurrentPosition();
   }
 
   async getCurrentPosition() {
@@ -41,14 +52,22 @@ export default class MapScreen extends Component {
       },
 
       (error) => this.setState({ error: error.message }),
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000, distanceFilter: 10 },
+      { enableHighAccuracy: true, timeout: 5000,  distanceFilter: 20 },
     );
+  }
+
+  runGetDirections = ()=> {
+    const {inputValue, gpsLat, gpsLng} = this.state;
+    const startLoc = `${gpsLat},${gpsLng}`;
+    const parking = this.parkings.find(x => x.name == inputValue);
+    const destinationLoc = `${parking.gpsLat},${parking.gpsLng}`;
+    this.getDirections(startLoc, destinationLoc);
+    
   }
 
   async getDirections(startLoc, destinationLoc) {
 
     try {
-
       let resp = await fetch(`https://maps.googleapis.com/maps/api/directions/json?origin=${startLoc}&destination=${destinationLoc}&key=AIzaSyBTBdvfJUhATPLp6dBl_eNmd5Dj8guOsw8`)
       let respJson = await resp.json();
       let points = Polyline.decode(respJson.routes[0].overview_polyline.points);
@@ -82,17 +101,16 @@ export default class MapScreen extends Component {
     const { navigation } = this.props;
     const parkings = navigation.getParam('param', []);
     const myLocation = navigation.getParam('myLocation', false);
-    const mapPanel = navigation.getParam('mapPanel', false);
+    const drawPanel = navigation.getParam('drawPanel', false);
     const { coords, gpsLat, gpsLng, inputValue } = this.state;
-    this.getCurrentPosition();
 
     return (
       <View style={styles.container}>
-        <View key="searchPanel" style={styles.searchPanel}>
+        {drawPanel && <View key="drawPanel" style={styles.drawPanel}>
           <TextInput editable={false} value={inputValue} />
-          <Button title="Wyznacz" />
-        </View>
-        {<MapView style={styles.map}
+          <Button title="Wyznacz" onPress={this.runGetDirections} />
+        </View>}
+        {<MapView style={cn(styles,'map',{mapWithPanel:drawPanel}, {mapWithoutPanel:!drawPanel} )}
           initialRegion={{
             latitude: 52.229,
             longitude: 21.011,
@@ -107,10 +125,13 @@ export default class MapScreen extends Component {
                 longitude: parseFloat(elem.gpsLng)
               }}
               title={elem.name}
-              onPress={(coordinate) => this.updateInputValue({
-                latitude: parseFloat(elem.gpsLat),
-                longitude: parseFloat(elem.gpsLng)
-              })}
+              onPress={() => {
+                if (drawPanel)
+                  this.updateInputValue({
+                    latitude: parseFloat(elem.gpsLat),
+                    longitude: parseFloat(elem.gpsLng)
+                  })
+              }}
             />
           ))}
           {
@@ -143,7 +164,6 @@ const styles = StyleSheet.create({
   },
   map: {
     position: 'absolute',
-    top: 40,
     left: 0,
     right: 0,
     bottom: 0,
@@ -151,7 +171,10 @@ const styles = StyleSheet.create({
   mapWithPanel: {
     top: 40,
   },
-  searchPanel: {
+  mapWithoutPanel:{
+    top:0,
+  },
+  drawPanel: {
     position: 'absolute',
     top: 0,
     width: '100%',
@@ -159,5 +182,6 @@ const styles = StyleSheet.create({
     zIndex: 100,
     display: 'flex',
     flexDirection: 'row',
+    justifyContent:'space-between',
   }
 });

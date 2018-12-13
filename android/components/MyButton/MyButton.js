@@ -9,10 +9,10 @@ export default class MyButton extends Component {
 
     render() {
         const { metadata } = this.props;
-        const { content, screen, navigate, param, myLocation} = metadata;
+        const { content, screen, navigate, param, myLocation, drawPanel} = metadata;
         return (
             <Button title={content} buttonStyle={styles.Button}
-            onPress={() => navigate(screen, {param:param, myLocation:myLocation})}
+            onPress={() => navigate(screen, {param:param, myLocation:myLocation, drawPanel:drawPanel})}
 />
             );
     }
