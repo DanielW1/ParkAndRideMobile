@@ -1,0 +1,15 @@
+.Button{
+    width:60%;
+    text-align: center;
+    height: 2rem;
+}
+
+.ButtonColor{
+    color:white;
+    background-color: rgb(17, 175, 238);
+}
+
+.ButtonRadius{
+    border:1px solid rgb(17, 175, 238);
+    border-radius: 10px;
+}
