@@ -142,10 +142,13 @@ dependencies {
     compile project(':react-native-maps')
     compile project(':react-native-gesture-handler')
     compile project(':react-native-google-places')
+   // compile project(':react-native-google-location')
+   // compile "com.google.android.gms:play-services-location:16.0.0"
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation "com.android.support:appcompat-v7:${rootProject.ext.supportLibVersion}"
     implementation "com.facebook.react:react-native:+"  // From node_modules
     implementation project(':react-native-maps')
+    implementation "com.google.android.gms:play-services-location:16.0.0"
 
 }
 

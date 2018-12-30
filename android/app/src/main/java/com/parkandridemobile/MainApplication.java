@@ -15,6 +15,8 @@ import com.facebook.soloader.SoLoader;
 
 import java.util.Arrays;
 import java.util.List;
+//import com.timhagn.rngloc.RNGLocation;
+
 
 public class MainApplication extends Application implements ReactApplication {
 
@@ -32,6 +34,7 @@ public class MainApplication extends Application implements ReactApplication {
             new MapsPackage(),
             new RNGestureHandlerPackage(),
             new RNGooglePlacesPackage()
+           // new RNGLocation()
       );
     }
 

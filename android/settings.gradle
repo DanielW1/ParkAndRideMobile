@@ -15,3 +15,5 @@ project(':react-native-maps').projectDir = new File(rootProject.projectDir, '../
 
 include ':react-native-google-places'
 project(':react-native-google-places').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-google-places/android')
+// include ':react-native-google-location'
+// project(':react-native-google-location').projectDir = new File(rootProject.projectDir, '../node_modules/react-native-google-location/android/app')

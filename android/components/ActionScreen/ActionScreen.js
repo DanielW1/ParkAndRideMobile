@@ -1,8 +1,8 @@
 import React, { Component } from 'react';
-import { StyleSheet, View ,Text} from 'react-native';
+import { StyleSheet, View, Text } from 'react-native';
 import MyButton from "./../MyButton";
 import axios from 'axios';
-import GooglePlacesInput from '../GooglePlacesInput';
+import GooglePlaceInput from '../GooglePlaceInput';
 
 
 
@@ -18,71 +18,43 @@ export default class ActionScreen extends Component {
             gpsLat: "52.27",
             gpsLng: "21.15",
             name: "",
-            bestParkings:[],
-            coords:[],
+            bestParkings: [],
+            coords: [],
         }
 
     }
 
     componentDidMount() {
         axios.get('https://parkandrideapp.azurewebsites.net/Parking/mobilelist').then(res => {
-          const parkings = res.data;
-          this.setState({ parkings });
+            const parkings = res.data;
+            this.setState({ parkings });
         });
 
-       
-       /*return fetch('https://parkandrideapp.azurewebsites.net/Parking/mobilebestroad', {
-            method: "POST",
-            headers:new Headers ({
-                'Accept': "application/json",
-                'Content-Type': "application/json",
-            }),
-            body: JSON.stringify({
-                gpsLat: 52.00,
-                gpsLng: 21.00,
-            }),
-        }).then((response) => response.json())
-            .then((responseJson) => {
-                const parkings = responseJson;
-                 this.setState({parkings})
-                    
-            }).catch((error)=>{
-                console.log(error);
-            })*/
-        // axios.post('https://parkandrideapp.azurewebsites.net/Parking/mobilebestroad', {
-        //     gpsLat: 52.00,
-        //     gpsLng: 21.00,
-        //   })
-        //   .then((response) => {
-        //     const parkings = response.data;
-        //     this.setState({parkings})
-        //   })
-        //    .catch((error) => {
-        //      this.setState({error})
-        //   });
 
-       navigator.geolocation.getCurrentPosition.bind(this)(
-            (position) => {     
-              this.setState({     
-                gpsLat: position.coords.latitude,     
-                gpsLng: position.coords.longitude,     
-                error: null,     
-              },() =>this.getBestRoad());  
+
+        navigator.geolocation.getCurrentPosition.bind(this)(
+            (position) => {
+                console.log(position);
+                this.setState({
+                    gpsLat: position.coords.latitude,
+                    gpsLng: position.coords.longitude,
+                    error: null,
+                }, this.getBestRoad);
             },
 
-            (error) => this.setState({ error: error.message }),      
-            { enableHighAccuracy: true, timeout: 20000, distanceFilter: 10 },     
-          );
+            (error) => this.setState({ error: error.message }),
+            { enableHighAccuracy: true, timeout: 20000 },
+        );
 
 
     }
 
-getBestRoad = () => {
-    axios.get(`https://parkandrideapp.azurewebsites.net/Parking/mobilebestRoad?gpsLat=${this.state.gpsLat}&gpsLng=${this.state.gpsLng}`).then(res => {
-        const bestParkings = res.data;
-        this.setState({ bestParkings });
-      });
-}
+    getBestRoad = () => {
+        axios.get(`https://parkandrideapp.azurewebsites.net/Parking/mobilebestRoad?gpsLat=${this.state.gpsLat}&gpsLng=${this.state.gpsLng}`).then(res => {
+            const bestParkings = res.data;
+            this.setState({ bestParkings });
+        });
+    }
 
     render() {
         const { navigate } = this.props.navigation;
@@ -98,12 +70,12 @@ getBestRoad = () => {
         }
         const buttonLocation = {
             content: "Lokalizacja", type: true,
-            screen: "Map", navigate: navigate,param:[], myLocation:true, 
+            screen: "Map", navigate: navigate, param: [], myLocation: true,
         }
         const buttonBestRoad = {
             content: "Najlepszy dojazd", type: true,
-            screen: "Map", navigate: navigate, param: bestParkings,myLocation:true,
-            drawPanel:true
+            screen: "Map", navigate: navigate, param: bestParkings, myLocation: true,
+            drawPanel: true
         }
         const buttonLoguot = {
             content: "Wyloguj", type: true,
@@ -111,18 +83,16 @@ getBestRoad = () => {
         }
 
         return <View style={styles.Container}>
-            {/* <Header
-                leftComponent={{ icon: 'menu', color: '#fff' }}
-                centerComponent={{ text: 'MY TITLE', style: { color: '#fff' } }}
-                rightComponent={{ icon: 'home', color: '#fff' }}
-            /> */}
-            <GooglePlacesInput/>
+
+            {/* <View style={styles.GooglePlaceInputView}>
+                <GooglePlaceInput />
+            </View> */}
             <MyButton metadata={buttonMapList} />
             <MyButton metadata={buttonList} />
             <MyButton metadata={buttonLocation} />
             <MyButton metadata={buttonBestRoad} />
             <MyButton metadata={buttonLoguot} />
-            
+
         </View>
     }
 }
@@ -135,5 +105,12 @@ const styles = StyleSheet.create({
         flexDirection: 'column',
         justifyContent: 'space-around',
         alignItems: 'center',
+    },
+    GooglePlaceInputView: {
+        backgroundColor: 'rgba(255,255,255,0.5)',
+        position: 'absolute',
+        top: 0,
+        zIndex:100,
+        width:'100%'
     }
 })
