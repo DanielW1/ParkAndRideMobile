@@ -13,10 +13,14 @@ import ActionScreen from "./android/components/ActionScreen";
 import MapScreen from "./android/components/MapScreen";
 import MapListScreen from "./android/components/MapListScreen";
 import ListItemScreen from './android/components/ListItemScreen';
+import LoginPanel from "./android/components/LoginPanel"
+import RegisterPanel from './android/components/RegisterPanel/RegisterPanel';
 
 
 const Navigator = createStackNavigator({
-  Home: {screen: ActionScreen},
+  Home:{screen:LoginPanel},
+  LoggedIn: {screen: ActionScreen},
+  RegisterSreen:{screen:RegisterPanel},
   Map: {screen: MapScreen},
   ParkingList:{screen:MapListScreen},
   ListItem:{screen:ListItemScreen}

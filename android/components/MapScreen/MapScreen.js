@@ -82,7 +82,7 @@ export default class MapScreen extends Component {
   }
 
   runGetDirections = () => {
-    const { inputValue, gpsLat, gpsLng, destinationPanel, travelDestination } = this.state;
+    const { inputValue, gpsLat, gpsLng, destinationPanel, travelDestination, duration } = this.state;
     const startLoc = `${gpsLat},${gpsLng}`;
     if (inputValue && gpsLat && gpsLng) {
       const parking = this.parkings.find(x => x.name == inputValue);
@@ -92,13 +92,18 @@ export default class MapScreen extends Component {
       } else if (travelDestination.geometry) {
         const { lat, lng } = travelDestination.geometry.location;
         const travelDestinationLocationString = `${lat},${lng}`;
-        this.getDirections(destinationLoc, travelDestinationLocationString, 'transit', true)
+       /* const date = Date.now() + (duration != null ? parseInt(duration.value) * 1000 : 0);
+        alert(date);*/
+        let date = Math.ceil(Date.now()/1000);
+        if (duration) { date += parseInt(duration.value)}
+        this.getDirections(destinationLoc, travelDestinationLocationString,'transit', true, date)
       }
     }
 
   }
 
-  async getDirections(startLoc, destinationLoc, travelMode = 'DRIVING',alternatives=false) {
+  async getDirections(startLoc, destinationLoc, travelMode = 'DRIVING',
+  alternatives=false, departure_time = "now") {
 
     try {
       let resp = await axios(`https://maps.googleapis.com/maps/api/directions/json?`, {
@@ -107,9 +112,11 @@ export default class MapScreen extends Component {
           destination: destinationLoc,
           mode: travelMode,
           alternatives:alternatives,
+          departure_time:departure_time,
           key: "AIzaSyBTBdvfJUhATPLp6dBl_eNmd5Dj8guOsw8"
         }
       })
+      
       const {routes} = resp.data;
       const { duration, distance } = routes[0].legs[0];
       let points = Polyline.decode(resp.data.routes[0].overview_polyline.points);

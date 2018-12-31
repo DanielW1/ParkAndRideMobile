@@ -57,7 +57,8 @@ export default class ActionScreen extends Component {
     }
 
     render() {
-        const { navigate } = this.props.navigation;
+        const { navigation } = this.props;
+        const navigate = navigation.getParam('navigate', ()=>{});
         const { parkings, bestParkings, coords } = this.state;
 
         const buttonMapList = {
