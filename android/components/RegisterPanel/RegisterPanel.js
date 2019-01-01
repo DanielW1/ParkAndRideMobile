@@ -18,9 +18,8 @@ export default class RegisterPanel extends Component{
     }
 
    async  registerUser(){
-       console.log(this, this.state);
         const {login, password} = this.state;
-        console.log(login,password);
+        
         await axios({
             method:'post',
             url:'https://parkandrideapp.azurewebsites.net/account/post',

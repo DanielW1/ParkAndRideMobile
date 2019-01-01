@@ -1,6 +1,14 @@
 import React, {Component} from "react";
 import {View, TextInput, StyleSheet, Text} from "react-native";
 
+//Dostępne propsy:
+/*
+value - text wyświetlany w input
+onChangeText - funkcja wołana na zmianę zawartości input
+secureTextEntry- stosowane dla haseł
+label - labelka opisująca input,
+onFocus - akcja na wywołanie komponentu, wkliknięcie
+*/
 export default class CustomTextInput extends Component{
     constructor(){
         super();
