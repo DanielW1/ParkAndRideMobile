@@ -8,7 +8,8 @@ import GooglePlaceInput from "./../GooglePlaceInput";
 import axios from 'axios';
 import RoutesList from '../RoutesList/RoutesList';
 
-
+const DISTANCE_ALLOW_ON_PARK = 7000;//wartość wyrażona w metrach. Gdy użytkownik będzie w odległości mniejszej 
+//niż podana od wybranego parkingu to pokaże mu się opcja "zaparkuj"
 /**
  * Komponent screen mapy wołamy z różnymi parametrami w zależności od funkcji jaką ma pełnić.
  * Możemy wyświetlać własną lokalizację, drogę z punktu A do punktu B , nanieść markery na mapę w
@@ -30,8 +31,9 @@ export default class MapScreen extends Component {
     this.state = {
       parkings: [],
       coords: [],
-      transitCoords: [],
-      routes:[],
+      transitPoints: [],
+      pinRoad: [],
+      routes: [],
       distance: null,
       duration: null,
       gpsLat: 52.2,
@@ -40,6 +42,7 @@ export default class MapScreen extends Component {
       inputValue: "",
       destinationPanel: false,
       travelDestination: {},
+      enablePark: false,
     }
     this.navigation = this.props.navigation;
     this.parkings = this.navigation.getParam('param', []);
@@ -49,7 +52,7 @@ export default class MapScreen extends Component {
   componentDidMount() {
     this.getCurrentPosition();
   }
-  componentWillUnmount(){
+  componentWillUnmount() {
     navigator.geolocation.clearWatch(this.watchID);
   }
 
@@ -64,10 +67,9 @@ export default class MapScreen extends Component {
       },
 
       (error) => {
-
         this.setState({ error: error.message })
       },
-      { enableHighAccuracy: true, timeout: 10000 },
+      { enableHighAccuracy: true, timeout: 5000 },
     );
 
     this.watchID = navigator.geolocation.watchPosition.bind(this)((position) => {
@@ -78,7 +80,7 @@ export default class MapScreen extends Component {
       }, this.runGetDirections);
     },
       (error) => { this.setState({ error: error.message }) },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000, distanceFilter: 5 })
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 1000, distanceFilter: 20 })
   }
 
   runGetDirections = () => {
@@ -92,18 +94,16 @@ export default class MapScreen extends Component {
       } else if (travelDestination.geometry) {
         const { lat, lng } = travelDestination.geometry.location;
         const travelDestinationLocationString = `${lat},${lng}`;
-       /* const date = Date.now() + (duration != null ? parseInt(duration.value) * 1000 : 0);
-        alert(date);*/
-        let date = Math.ceil(Date.now()/1000);
-        if (duration) { date += parseInt(duration.value)}
-        this.getDirections(destinationLoc, travelDestinationLocationString,'transit', true, date)
+        let date = Math.ceil(Date.now() / 1000);
+        if (duration) { date += parseInt(duration.value) }
+        this.getDirections(destinationLoc, travelDestinationLocationString, 'transit', true, date)
       }
     }
 
   }
 
   async getDirections(startLoc, destinationLoc, travelMode = 'DRIVING',
-  alternatives=false, departure_time = "now") {
+    alternatives = false, departure_time = "now") {
 
     try {
       let resp = await axios(`https://maps.googleapis.com/maps/api/directions/json?`, {
@@ -111,13 +111,13 @@ export default class MapScreen extends Component {
           origin: startLoc,
           destination: destinationLoc,
           mode: travelMode,
-          alternatives:alternatives,
-          departure_time:departure_time,
+          alternatives: alternatives,
+          departure_time: departure_time,
           key: "AIzaSyBTBdvfJUhATPLp6dBl_eNmd5Dj8guOsw8"
         }
       })
-      
-      const {routes} = resp.data;
+
+      const { routes } = resp.data;
       const { duration, distance } = routes[0].legs[0];
       let points = Polyline.decode(resp.data.routes[0].overview_polyline.points);
       let coords = points.map((point, index) => {
@@ -127,11 +127,15 @@ export default class MapScreen extends Component {
         }
 
       })
-      if (travelMode != 'transit')
-        this.setState({ coords: coords, duration: duration, distance: distance })
-      else
-        this.setState({duration: duration, distance: distance, routes: routes })
-        return coords
+      if (travelMode != 'transit') {
+        let enablePark = false;
+        if (distance.value < DISTANCE_ALLOW_ON_PARK) {
+          enablePark = true;
+        }
+        this.setState({ coords: coords, duration: duration, distance: distance, enablePark: enablePark })
+      } else
+        this.setState({ duration: duration, distance: distance, routes: routes, enablePark: false, })
+      return coords
     } catch (error) {
       alert(error)
       return error
@@ -157,15 +161,32 @@ export default class MapScreen extends Component {
     this.setState({ travelDestination: details });
   }
 
+  onPressParkHandler = () => {
+    const navigate = this.props.navigation.getParam('navigate', () => { });
+    const user = this.props.navigation.getParam('user', {});
+    const parking = this.parkings.find(x => x.name == this.state.inputValue);
+    navigate('ParkScreen', { parking: parking, user: user });
+  }
+
   routesListHandler = (route) => {
-    let points = Polyline.decode(route.overview_polyline.points);
-    let coords = points.map((point, index) => {
-      return {
-        latitude: point[0],
-        longitude: point[1]
+    const { steps } = route.legs[0];
+    let pinRoad = [];
+    let transitPoints = steps.map((elem) => {
+      let points = Polyline.decode(elem.polyline.points);
+      let coords = points.map((point, index) => {
+        return {
+          latitude: point[0],
+          longitude: point[1]
+        }
+      })
+      if (elem.transit_details) {
+        pinRoad.push({ location: elem.start_location, name: elem.transit_details.departure_stop.name },
+          { location: elem.end_location, name: elem.transit_details.arrival_stop.name })
       }
+      let transitPoint = elem.transit_details ? { coords: coords, color: elem.transit_details.line.color } : { coords: coords, color: "blue" };
+      return transitPoint;
     })
-      this.setState({ transitCoords: coords, destinationPanel:false})
+    this.setState({ transitPoints: transitPoints, pinRoad: pinRoad, destinationPanel: false })
   }
 
   render() {
@@ -173,7 +194,8 @@ export default class MapScreen extends Component {
     const parkings = navigation.getParam('param', []);
     const myLocation = navigation.getParam('myLocation', false);
     const directionScreen = navigation.getParam('drawPanel', false);
-    const { coords,transitCoords, gpsLat, gpsLng, inputValue, distance, duration, destinationPanel, routes } = this.state;
+    const { coords, transitPoints, pinRoad, gpsLat, gpsLng, inputValue,
+      distance, duration, destinationPanel, routes, enablePark } = this.state;
 
     return (
       <View style={styles.container}>
@@ -188,7 +210,7 @@ export default class MapScreen extends Component {
           {destinationPanel && <View style={styles.drawPanel}>
             <GooglePlaceInput handler={this.googlePlaceInputHandler} />
           </View>}
-          {destinationPanel && routes.length > 0 && <RoutesList handler={this.routesListHandler} routes={routes}/>}
+          {destinationPanel && routes.length > 0 && <RoutesList handler={this.routesListHandler} routes={routes} />}
         </View>}
         {!destinationPanel && <MapView style={cn(styles, 'map',
           { mapWithPanel: directionScreen && !distance },
@@ -229,19 +251,33 @@ export default class MapScreen extends Component {
               pinColor="yellow"
             />
           }
+          {
+            pinRoad.map((elem) => <Marker key={elem.location.lat}
+              pinColor="#3385ff"
+              coordinate={{
+                latitude: elem.location.lat,
+                longitude: elem.location.lng
+              }}
+              title={elem.name}
+            />)
+          }
           {coords.length > 0 && <MapView.Polyline
             coordinates={coords}
             strokeWidth={2}
             strokeColor="blue" />}
-          {transitCoords.length > 0 && <MapView.Polyline
-            coordinates={transitCoords}
+          {transitPoints.map((elem, index) => <MapView.Polyline
+            key={index + "polyline"}
+            coordinates={elem.coords}
             strokeWidth={2}
-            strokeColor="red" />}
+            strokeColor={elem.color} />)}
         </MapView>}
         {inputValue !== "" && <TouchableHighlight style={cn(styles, 'promps')} onPress={this.enableDestinationPanel}><View >
           <Text style={cn(styles, 'whiteText')}>{destinationPanel ? "Cofnij" : "Cel"}</Text>
         </View></TouchableHighlight>}
-        
+        {enablePark && <TouchableHighlight style={cn(styles, 'park')} onPress={() => this.onPressParkHandler()}><View >
+          <Text style={cn(styles, 'whiteText')}>Zaparkuj</Text>
+        </View></TouchableHighlight>}
+
 
       </View>
     );
@@ -302,6 +338,20 @@ const styles = StyleSheet.create({
     alignItems: "center",
     borderBottomLeftRadius: 50,
     borderTopLeftRadius: 50,
+  },
+  park: {
+    height: 60,
+    width: 90,
+    backgroundColor: "blue",
+    position: "absolute",
+    bottom: 40,
+    left: 0,
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    borderBottomRightRadius: 50,
+    borderTopRightRadius: 50,
   },
   whiteText: {
     color: "white",

@@ -4,25 +4,25 @@ import { ListItem } from 'react-native-elements';
 import axios from 'axios';
 
 
-export default class MapListScreen extends Component {
+export default class ParkingsListScreen extends Component {
     static navigationOptions = {
         title: 'Parkingi',
-      };
+    };
 
     constructor(props) {
         super(props);
         this.navigation = props.navigation;
     }
 
-    keyExtractor = (item, index) => index
+    keyExtractor = (item, index) => `${index}${item.name}`;
 
     renderItem = ({ item }) => (
-       
+
         <ListItem
             title={item.name}
             leftIcon={{ name: 'av-timer' }}
-            containerStyle={{ borderBottomWidth: 1, borderBottomColor:"black" }}
-            onPress={() => this.navigation.navigate("ListItem",{parking:item})}
+            containerStyle={{ borderBottomWidth: 1, borderBottomColor: "black" }}
+            onPress={() => this.navigation.navigate("ListItem", { parking: item })}
         />
     )
 

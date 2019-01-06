@@ -8,9 +8,9 @@ export default class Button extends Component{
         
 
     render(){
-        const {onPress, text, size="medium" } = this.props;
-        return <TouchableHighlight underlayColor="#00BFFF" onPress={onPress} style={[styles[size], styles.Button]}>
-            <Text style={styles.color}>{text}</Text>
+        const {onPress, text, size="medium", button2, color } = this.props;
+        return <TouchableHighlight underlayColor="#00BFFF" onPress={onPress} style={[styles[size],button2?styles.Button2:styles.Button]}>
+            <Text style={color?{color:color}:styles.color}>{text}</Text>
         </TouchableHighlight>
     }
 }
@@ -20,11 +20,11 @@ const styles = StyleSheet.create({
         height:80,
     },
     small:{
-        width: "100%",
+        width: "50%",
         height: 40,
     },
     medium:{
-        width: "100%",
+        width: "70%",
         height: 50,
     },
     Button:{
@@ -40,6 +40,17 @@ const styles = StyleSheet.create({
         marginRight:"auto",
         borderRadius:10,
         
+    },
+    Button2:{
+        backgroundColor: "#00BFFF",
+        borderColor: "white",
+        borderWidth: 5,
+        padding: 10,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        marginLeft: "auto",
+        marginRight: "auto",
     },
     color:{
         color: "#00BFFF",

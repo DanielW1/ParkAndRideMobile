@@ -1,17 +1,37 @@
 import React, { Component } from "react";
-import { View, StyleSheet, Text, TouchableHighlight } from "react-native"
+import { StyleSheet, Text, TouchableHighlight, Image, View } from "react-native"
+
+const iconAddress = {
+    WALKING: <Image source={require("../../../src/image/walking.png")} style={{ width: 30, height: 30 }}></Image>,
+    BUS: <Image source={require("../../../src/image/bus.png")} style={{ width: 30, height: 30 }}></Image>,
+    SUBWAY: <Image source={require("../../../src/image/subway.png")} style={{ width: 30, height: 30 }}></Image>,
+    TRAM: <Image source={require("../../../src/image/tram.png")} style={{ width: 30, height: 30 }}></Image>,
+    HEAVY_RAIL: <Image source={require("../../../src/image/train.png")} style={{ width: 30, height: 30 }}></Image>,
+
+}
 
 export default class RoutesListItem extends Component {
 
-    calculateRoads = () => {
+    renderRouteList = () => {
         const { route } = this.props;
-        const { steps, departure_time } = route.legs[0];
-        let result = steps.reduce((agrr, current, index) => {
-            return agrr += ((current.travel_mode === "WALKING" ?
-                current.travel_mode : current.transit_details.line.vehicle.type) +
-                (current.travel_mode != 'WALKING' ? ` ${current.transit_details.line.short_name}` : "") + " > ")
-        }, "");
-        return result.substring(0,result.length-2)+" "+ departure_time.text;
+        const { steps } = route.legs[0];
+        return steps.map((elem, index) => {
+            if (elem.travel_mode === "WALKING") {
+                return  <Text key={index + "travel_mode"}>{iconAddress.WALKING} ></Text>
+                
+            } else {
+                return <Text key={index + "travel_mode"} >
+                {iconAddress[elem.transit_details.line.vehicle.type]}{elem.transit_details.line.short_name}>
+                </Text>
+            }
+        })
+    }
+
+    renderRouteTimeInfo = () => {
+        const { route } = this.props;
+        const { departure_time, arrival_time, duration } = route.legs[0];
+
+        return `Odjazd: ${departure_time.text} Przyjazd:${arrival_time.text} Czas:${duration.text}`
     }
 
     calculateDuratiuon = () => {
@@ -28,21 +48,34 @@ export default class RoutesListItem extends Component {
     render() {
 
 
-        return <TouchableHighlight onPress={this.runHandlerMethod} style={styles.RoutesListItem}>
+        return <><TouchableHighlight underlayColor="white"
+            onPress={this.runHandlerMethod} style={styles.RoutesListItem}>
             <>
-                <Text>{this.calculateRoads()}</Text>
-                <Text>{this.calculateDuratiuon()}</Text>
+                <View style={styles.RoutesListItemRow}>
+                    <Text style={styles.row}>
+                        {this.renderRouteList().map(elem => elem)}
+                    </Text>
+                </View>
+                <Text>{this.renderRouteTimeInfo()}</Text>
             </>
         </TouchableHighlight>
+
+        </>
     }
 }
 
 const styles = StyleSheet.create({
-    RoutesListItem: {
-        borderBottomWidth: 1,
-        borderBottomColor: "black",
-        height: 40,
+    RoutesListItemRow: {
         display: "flex",
-        flexDirection: "row",
+        flexDirection: "column",
+    },
+    RoutesListItem: {
+        borderWidth: 1,
+        borderColor: "black",
+        padding: 5,
+        margin: 5,
+    },
+    row: {
+        padding: 10,
     }
 })

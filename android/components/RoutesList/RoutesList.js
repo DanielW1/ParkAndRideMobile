@@ -8,7 +8,7 @@ export default class RoutesList extends Component{
         const{routes, handler} = this.props;
        
         return <View style={styles.RoutesListContainer}>{
-            routes.map((elem) => <RoutesListItem handler={handler} route={elem}/>)
+            routes.map((elem, index) => <RoutesListItem key={index+"RoutesListItem"} handler={handler} route={elem}/>)
         }</View>
     }
 }

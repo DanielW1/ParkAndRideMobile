@@ -17,13 +17,14 @@ export default class CustomTextInput extends Component{
         }
     }
     render(){
-        const { value, onChangeText, secureTextEntry,label, onFocus} = this.props;
+        const { value, onChangeText, secureTextEntry,label, onFocus, placeholder} = this.props;
         return <View style={styles.textInput}>
-            <Text>{label}</Text>
+            {label && <Text>{label}</Text>}
             <TextInput secureTextEntry={secureTextEntry} 
             onChangeText={(text)=>onChangeText(text)} 
             value={value}
-            onFocus={onFocus}></TextInput>
+            onFocus={onFocus}
+            placeholder={placeholder}></TextInput>
         </View>
     }
 }

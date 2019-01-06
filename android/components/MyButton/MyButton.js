@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { StyleSheet} from 'react-native';
-import { Button } from 'react-native-elements';
+//import { Button } from 'react-native-elements';
+import Button from "./../Button"
 
 export default class MyButton extends Component {
     constructor(props) {
@@ -9,10 +10,10 @@ export default class MyButton extends Component {
 
     render() {
         const { metadata } = this.props;
-        const { content, screen, navigate, param, myLocation, drawPanel} = metadata;
+        const { content, screen, navigate, param, myLocation, drawPanel, user} = metadata;
         return (
-            <Button title={content} buttonStyle={styles.Button}
-            onPress={() => navigate(screen, {param:param, myLocation:myLocation, drawPanel:drawPanel})}
+            <Button text={content} size="medium"
+            onPress={() => navigate(screen, {param:param, user:user, myLocation:myLocation, drawPanel:drawPanel, navigate:navigate})}
 />
             );
     }
